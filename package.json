@@ -1,0 +1,20 @@
+{
+  "name": "project-lab_1",
+  "version": "1.0.0",
+  "description": "Lab for BESD",
+  "keywords": [
+    "lab1",
+    "Project"
+  ],
+  "license": "ISC",
+  "author": "Topiike",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mysql2": "^3.16.2"
+  }
+}
