@@ -1,3 +1,7 @@
-node_modules
+node_modules/
 .DS_Store
-.idea
+.idea/
+.env
+.env.test
+.env.local
+package-lock.json

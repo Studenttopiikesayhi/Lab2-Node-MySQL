@@ -1,0 +1,69 @@
+### ==========================================
+### 🧪 โซนทดสอบระบบป้องกัน (JSON เคสเดิม)
+### ==========================================
+# หมายเหตุ: หากคุณแก้ route POST ให้รับไฟล์แล้ว เคส 1, 2, 3 ด้านล่างนี้อาจจะ Error
+# เพราะ Server รอรับข้อมูลแบบฟอร์ม (Multipart) ไม่ใช่ JSON
+
+### 1. ทดสอบเพิ่มข้อมูล (แบบ JSON)
+POST http://localhost:3000/teacher
+Content-Type: application/json
+
+{
+  "teacherId": "888",
+  "teacherName": "อ.สมมติ ทดสอบระบบ",
+  "department": "Security",
+  "teacherPicture": "test.jpg"
+}
+
+### 2. ทดสอบลบข้อมูล (ตามรหัส)
+DELETE http://localhost:3000/teacher/888
+
+### ==========================================
+### 🖼️ โซนทดสอบอัปโหลด (แยกประเภทไฟล์อัตโนมัติ)
+### ==========================================
+
+### 3. ทดสอบอัปโหลด "รูปภาพ" (ต้องไปโผล่ใน public/images)
+POST http://localhost:3000/teacher
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="teacherId"
+
+T999
+--WebAppBoundary
+Content-Disposition: form-data; name="teacherName"
+
+อ.อัปโหลด รูปภาพ
+--WebAppBoundary
+Content-Disposition: form-data; name="department"
+
+Multimedia Arts
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./public/images/test.jpg
+--WebAppBoundary--
+
+### 4. ทดสอบอัปโหลด "PDF" (ต้องไปโผล่ใน public/files)
+POST http://localhost:3000/teacher
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="teacherId"
+
+T-DOC
+--WebAppBoundary
+Content-Disposition: form-data; name="teacherName"
+
+อ.อัปโหลด เอกสาร
+--WebAppBoundary
+Content-Disposition: form-data; name="department"
+
+Documentation
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="manual.pdf"
+Content-Type: application/pdf
+
+< ./public/files/test.pdf
+--WebAppBoundary--
