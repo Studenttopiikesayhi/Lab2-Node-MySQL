@@ -1,10 +1,15 @@
 const express = require('express');
-const bodyParser = require('body-parser'); // แก้ชื่อตัวแปรให้เป็นมาตรฐาน (CamelCase)
+const bodyParser = require('body-parser');
+const cors = require('cors'); // 👈 1. นำเข้า cors เข้ามาช่วยปลดล็อก
 const app = express();
 require('dotenv').config();
 
+// 👈 2. เปิดใช้งาน cors ให้ทำงานกับทุกๆ เส้นทาง
+app.use(cors());
+
 const port = process.env.PORT || 3000;
 const teacher = require('./teacher'); // นำเข้า Route ของ Teacher
+const student = require('./student'); // 🚀 นำเข้า Route ของ Student เพิ่มเข้ามา
 
 // ตั้งค่า Middleware สำหรับแปลงข้อมูล
 app.use(bodyParser.json());
@@ -19,6 +24,7 @@ app.use('/download', express.static('public'));
 
 // เส้นทางหลัก (Routes)
 app.use('/teacher', teacher);
+app.use('/student', student); // 🚀 เปิดสวิตช์ใช้งานเส้นทาง /student
 
 // Route หน้าแรก
 app.get('/', (req, res) => {
