@@ -1,69 +1,149 @@
 const express = require('express');
 const router = express.Router();
-const db = require('./mysql-config');
+const connection = require('./mysql-config');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// ตั้งค่าการเก็บรูปภาพนักเรียน
+// 1. ตั้งค่าการเก็บไฟล์ของนักศึกษา
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/images')
+    destination: (req, file, cb) => {
+        const imagePath = './public/images';
+        if (!fs.existsSync(imagePath)) fs.mkdirSync(imagePath, { recursive: true });
+        cb(null, imagePath);
     },
-    filename: function (req, file, cb) {
-        cb(null, 'S-' + Date.now() + path.extname(file.originalname))
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'student-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
 
-// 1. ดึงข้อมูลนักเรียนทั้งหมด (GET)
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+        }
+    }
+});
+
+// ==========================================
+// 2. Routes (CRUD) สำหรับ Student
+// ==========================================
+
+// 🚀 ดึงข้อมูลนักศึกษาทั้งหมด
 router.get('/', (req, res) => {
-    db.query('SELECT * FROM student', (err, results) => {
-        // เอา .status(500) ออกแล้ว
+    const sql = 'SELECT * FROM student ORDER BY studentId ASC';
+    connection.query(sql, (err, results) => {
         if (err) return res.json({ result: 0, message: err.message });
-        res.json({ result: 1, data: results, message: 'ดึงข้อมูลสำเร็จ' });
+        res.json({ result: 1, data: results });
     });
 });
 
-// 2. เพิ่มข้อมูลนักเรียน (POST)
-router.post('/', upload.single('image'), (req, res) => {
-    const { studentId, name, score, gender } = req.body;
-    let studentPicture = req.file ? req.file.filename : null;
-
-    const sql = 'INSERT INTO student (studentId, name, score, gender, studentPicture) VALUES (?, ?, ?, ?, ?)';
-    db.query(sql, [studentId, name, score, gender, studentPicture], (err, result) => {
-        // เอา .status(500) ออก เพื่อให้ Angular แจ้งเตือนเรื่องรหัสซ้ำได้
+// 🚀 เพิ่มข้อมูลนักศึกษา
+router.post('/', (req, res) => {
+    upload.single('image')(req, res, (err) => {
         if (err) return res.json({ result: 0, message: err.message });
-        res.json({ result: 1, message: 'เพิ่มข้อมูลสำเร็จ' });
+
+        const { studentId, name, score, gender } = req.body;
+        const studentPicture = req.file ? req.file.filename : "";
+
+        const sql = 'INSERT INTO student (studentId, name, score, gender, studentPicture) VALUES (?, ?, ?, ?, ?)';
+        connection.query(sql, [studentId, name, score, gender, studentPicture], (dbErr, results) => {
+            if (dbErr) return res.json({ result: 0, message: dbErr.message });
+            res.json({ result: 1, message: 'เพิ่มข้อมูลนักศึกษาสำเร็จ' });
+        });
     });
 });
 
-// 3. แก้ไขข้อมูลนักเรียน (PUT)
-router.put('/:id', upload.single('image'), (req, res) => {
-    const { id } = req.params;
-    const { name, score, gender } = req.body;
-
-    let sql = 'UPDATE student SET name = ?, score = ?, gender = ?';
-    let params = [name, score, gender];
-
-    if (req.file) {
-        sql += ', studentPicture = ?';
-        params.push(req.file.filename);
-    }
-    sql += ' WHERE studentId = ?';
-    params.push(id);
-
-    db.query(sql, params, (err, result) => {
+// 🚀 API แก้ไขข้อมูลนักศึกษา
+router.put('/:id', (req, res) => {
+    upload.single('image')(req, res, (err) => {
         if (err) return res.json({ result: 0, message: err.message });
-        res.json({ result: 1, message: 'แก้ไขข้อมูลสำเร็จ' });
+
+        const id = req.params.id;
+        const { name, score, gender } = req.body;
+
+        let sql = 'UPDATE student SET name = ?, score = ?, gender = ?';
+        let params = [name, score, gender];
+
+        if (req.file) {
+            sql += ', studentPicture = ?';
+            params.push(req.file.filename);
+        }
+        sql += ' WHERE studentId = ?';
+        params.push(id);
+
+        connection.query(sql, params, (dbErr, results) => {
+            if (dbErr) return res.json({ result: 0, message: dbErr.message });
+            res.json({ result: 1, message: 'แก้ไขข้อมูลนักศึกษาเรียบร้อย' });
+        });
     });
 });
 
-// 4. ลบข้อมูลนักเรียน (DELETE)
+// 🚀 ลบข้อมูลนักศึกษา
 router.delete('/:id', (req, res) => {
-    const { id } = req.params;
-    db.query('DELETE FROM student WHERE studentId = ?', [id], (err, result) => {
+    const id = req.params.id;
+    connection.query('DELETE FROM student WHERE studentId = ?', [id], (err, results) => {
         if (err) return res.json({ result: 0, message: err.message });
-        res.json({ result: 1, message: 'ลบข้อมูลสำเร็จ' });
+        res.json({ result: 1, message: 'ลบข้อมูลเรียบร้อย' });
+    });
+});
+
+// ==========================================
+// 3. API สำหรับระบบ Login (Student)
+// ==========================================
+
+// 🚀 ล็อกอินนักศึกษา (POST /student/login)
+router.post('/login', (req, res) => {
+    // 1. รับค่าที่หน้าบ้านส่งมา
+    const { studentId, password } = req.body;
+
+    // 2. ค้นหานักศึกษาจากฐานข้อมูล
+    const sql = 'SELECT * FROM student WHERE studentId = ?';
+    connection.query(sql, [studentId], (err, results) => {
+        if (err) return res.json({ result: 0, message: err.message });
+
+        // เคสที่ 1: หาไอดีไม่เจอ
+        if (results.length === 0) {
+            return res.json({
+                result: 0,
+                status: 404,
+                message: 'Not Found: ไม่มีรหัสนักศึกษานี้ในระบบ'
+            });
+        }
+
+        // 3. ถ้าหาเจอ ให้ดึงข้อมูลมาเช็ครหัสผ่าน
+        const student = results[0];
+
+        // 💡 แปลงเป็นตัวอักษรและตัดช่องว่างซ้ายขวาทิ้ง (กันบั๊กผีหลอก)
+        const dbPassword = String(student.password).trim();
+        const inputPassword = String(password).trim();
+
+        // เคสที่ 2: รหัสผ่านไม่ตรงกัน
+        if (dbPassword !== inputPassword) {
+            return res.json({
+                result: 0,
+                status: 401,
+                message: 'Invalid: รหัสผ่านไม่ถูกต้อง'
+            });
+        }
+
+        // เคสที่ 3: ไอดีและรหัสผ่านถูกต้อง (ล็อกอินสำเร็จ)
+        res.json({
+            result: 1,
+            status: 200,
+            message: 'Login Success: ล็อกอินนักศึกษาสำเร็จ',
+            data: {
+                studentId: student.studentId,
+                name: student.name,
+                gender: student.gender
+            }
+        });
     });
 });
 
