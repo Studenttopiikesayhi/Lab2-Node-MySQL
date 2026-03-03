@@ -1,8 +1,17 @@
 ### ==========================================
+### 🔑 0. เข้ารหัสผ่านก่อนทดสอบ (สำคัญมาก)
+### ==========================================
+# หมายเหตุ: ส่วนนี้อาจารย์ไม่ได้สั่งให้เฝ้าประตู เพื่อใช้เซ็ตค่าเริ่มต้น
+PUT http://localhost:3000/teacher/password/TEST001
+Content-Type: application/x-www-form-urlencoded
+
+password=123456
+
+### ==========================================
 ### 🔐 โซนทดสอบระบบ Login (Authentication)
 ### ==========================================
 
-### 1. ทดสอบล็อกอิน: รหัสถูกต้อง (ต้องได้ status 200)
+### 1. ทดสอบล็อกอิน: รหัสถูกต้อง (ก๊อปปี้ Token จากที่นี่ไปใช้ด้านล่าง)
 POST http://localhost:3000/teacher/login
 Content-Type: application/json
 
@@ -11,7 +20,7 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### 2. ทดสอบล็อกอิน: รหัสผ่านผิด (ต้องได้ status 401)
+### 2. ทดสอบล็อกอิน: รหัสผ่านผิด
 POST http://localhost:3000/teacher/login
 Content-Type: application/json
 
@@ -20,7 +29,7 @@ Content-Type: application/json
   "password": "wrongpassword"
 }
 
-### 3. ทดสอบล็อกอิน: หาไอดีไม่เจอ (ต้องได้ status 404)
+### 3. ทดสอบล็อกอิน: หาไอดีไม่เจอ
 POST http://localhost:3000/teacher/login
 Content-Type: application/json
 
@@ -30,14 +39,14 @@ Content-Type: application/json
 }
 
 ### ==========================================
-### 🧪 โซนทดสอบระบบป้องกัน (JSON เคสเดิม)
+### 🧪 โซนทดสอบระบบป้องกัน (ต้องใช้ Token)
 ### ==========================================
-# หมายเหตุ: หากคุณแก้ route POST ให้รับไฟล์แล้ว เคส 1 ด้านล่างนี้อาจจะ Error
-# เพราะ Server รอรับข้อมูลแบบฟอร์ม (Multipart) ไม่ใช่ JSON
+# ⚠️ สำคัญ: อย่าลืมก๊อปปี้ Token จากข้อ 1 มาวางหลังคำว่า Bearer
 
 ### 4. ทดสอบเพิ่มข้อมูล (แบบ JSON)
 POST http://localhost:3000/teacher
 Content-Type: application/json
+Authorization: Bearer ใส่_TOKEN_ยาวๆ_จากข้อ1_ตรงนี้
 
 {
   "teacherId": "888",
@@ -48,14 +57,16 @@ Content-Type: application/json
 
 ### 5. ทดสอบลบข้อมูล (ตามรหัส)
 DELETE http://localhost:3000/teacher/888
+Authorization: Bearer ใส่_TOKEN_ยาวๆ_จากข้อ1_ตรงนี้
 
 ### ==========================================
-### 🖼️ โซนทดสอบอัปโหลด (แยกประเภทไฟล์อัตโนมัติ)
+### 🖼️ โซนทดสอบอัปโหลด (ต้องใช้ Token)
 ### ==========================================
 
-### 6. ทดสอบอัปโหลด "รูปภาพ" (ต้องไปโผล่ใน public/images)
+### 6. ทดสอบอัปโหลด "รูปภาพ"
 POST http://localhost:3000/teacher
 Content-Type: multipart/form-data; boundary=WebAppBoundary
+Authorization: Bearer ใส่_TOKEN_ยาวๆ_จากข้อ1_ตรงนี้
 
 --WebAppBoundary
 Content-Disposition: form-data; name="teacherId"
@@ -76,9 +87,10 @@ Content-Type: image/jpeg
 < ./public/images/test.jpg
 --WebAppBoundary--
 
-### 7. ทดสอบอัปโหลด "PDF" (ต้องไปโผล่ใน public/files)
+### 7. ทดสอบอัปโหลด "PDF"
 POST http://localhost:3000/teacher
 Content-Type: multipart/form-data; boundary=WebAppBoundary
+Authorization: Bearer ใส่_TOKEN_ยาวๆ_จากข้อ1_ตรงนี้
 
 --WebAppBoundary
 Content-Disposition: form-data; name="teacherId"

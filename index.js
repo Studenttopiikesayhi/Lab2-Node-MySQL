@@ -1,37 +1,42 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // 👈 1. นำเข้า cors เข้ามาช่วยปลดล็อก
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const app = express();
 require('dotenv').config();
 
-// 👈 2. เปิดใช้งาน cors ให้ทำงานกับทุกๆ เส้นทาง
+// เปิดใช้งาน cors ให้ทำงานกับทุกๆ เส้นทาง
 app.use(cors());
 
 const port = process.env.PORT || 3000;
-const teacher = require('./teacher'); // นำเข้า Route ของ Teacher
-const student = require('./student'); // 🚀 นำเข้า Route ของ Student เพิ่มเข้ามา
+const teacher = require('./teacher');
+const student = require('./student');
 
 // ตั้งค่า Middleware สำหรับแปลงข้อมูล
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // ==========================================
-// ✅ ส่วนสำคัญที่อาจารย์เพิ่งสอน (Static Files)
+// ✅ ส่วน Static Files (อาจารย์สอนล่าสุด)
 // ==========================================
-// เปิดให้เข้าถึงไฟล์ในโฟลเดอร์ public ได้ผ่าน URL ที่ขึ้นต้นด้วย /download
-// เช่น: http://localhost:3000/download/images/ชื่อไฟล์.jpg
 app.use('/download', express.static('public'));
 
-// เส้นทางหลัก (Routes)
+// ==========================================
+// 🚀 เส้นทางหลัก (Routes)
+// ==========================================
+/* 💡 หมายเหตุจากเลขา: ผมเอา verifyToken ออกจากบรรทัดด้านล่างนี้
+   เพื่อให้บอสสามารถเรียกเข้าหน้า /teacher/login และ /student/login ได้
+   ส่วนการล็อกข้อมูลส่วนอื่น บอสทำไว้ในไฟล์ teacher.js และ student.js เรียบร้อยแล้วครับ
+*/
 app.use('/teacher', teacher);
-app.use('/student', student); // 🚀 เปิดสวิตช์ใช้งานเส้นทาง /student
+app.use('/student', student);
 
 // Route หน้าแรก
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('Hello World! ระบบปลดล็อกหน้า Login ให้แล้วครับบอส');
 });
 
 // เริ่มต้น Server
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
