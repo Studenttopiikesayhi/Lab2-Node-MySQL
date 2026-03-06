@@ -25,15 +25,15 @@ app.use('/download', express.static('public'));
 // 🚀 เส้นทางหลัก (Routes)
 // ==========================================
 /* 💡 หมายเหตุจากเลขา: ผมเอา verifyToken ออกจากบรรทัดด้านล่างนี้
-   เพื่อให้บอสสามารถเรียกเข้าหน้า /teacher/login และ /student/login ได้
-   ส่วนการล็อกข้อมูลส่วนอื่น บอสทำไว้ในไฟล์ teacher.js และ student.js เรียบร้อยแล้วครับ
+   เพื่อให้สามารถเรียกเข้าหน้า /teacher/login และ /student/login ได้
+   ส่วนการล็อกข้อมูลส่วนอื่น ทำไว้ในไฟล์ teacher.js และ student.js เรียบร้อยแล้วครับ
 */
 app.use('/teacher', teacher);
 app.use('/student', student);
 
 // Route หน้าแรก
 app.get('/', (req, res) => {
-    res.send('Hello World! ระบบปลดล็อกหน้า Login ให้แล้วครับบอส');
+    res.send('Hello World! ระบบปลดล็อกหน้า Login ให้แล้วครับ');
 });
 
 // เริ่มต้น Server

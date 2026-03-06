@@ -6,7 +6,7 @@ const authGuard = (req, res, next) => {
     // 1. ดึงข้อมูลจากช่อง Authorization ใน HTTP Header
     const authHeader = req.headers['authorization'];
 
-    // ถ้าไม่มีการส่งค่ามาเลย (แอบเข้า) ให้เตะออก
+    // ถ้าไม่มีการส่งค่ามาเลย (แอบเข้า) ให้เตะออçก
     if (!authHeader) {
         return res.json({
             result: 0,
